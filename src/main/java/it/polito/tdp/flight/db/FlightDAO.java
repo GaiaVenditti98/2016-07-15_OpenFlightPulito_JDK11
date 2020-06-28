@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import it.polito.tdp.flight.model.Adiacenza;
 import it.polito.tdp.flight.model.Airline;
 import it.polito.tdp.flight.model.Airport;
 import it.polito.tdp.flight.model.Route;
@@ -56,19 +58,41 @@ public class FlightDAO {
 		}
 	}
 
-	public List<Airport> getAllAirports() {
+	public void getAllAirports(Map<Integer,Airport>idMap) {
 		String sql = "SELECT * FROM airport";
-		List<Airport> list = new ArrayList<>();
+		
 		try {
 			Connection conn = DBConnect.getConnection();
 			PreparedStatement st = conn.prepareStatement(sql);
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
-				list.add(new Airport(res.getInt("Airport_ID"), res.getString("name"), res.getString("city"),
+				if(!idMap.containsKey(res.getInt("Airport_ID"))) {
+				idMap.put(res.getInt("Airport_ID"),new Airport(res.getInt("Airport_ID"), res.getString("name"), res.getString("city"),
 						res.getString("country"), res.getString("IATA_FAA"), res.getString("ICAO"),
 						res.getDouble("Latitude"), res.getDouble("Longitude"), res.getFloat("timezone"),
 						res.getString("dst"), res.getString("tz")));
+				}
+			}
+			conn.close();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+	}
+	
+	public List<Adiacenza> getAdiacenze() {
+		String sql = "SELECT DISTINCT Source_airport_ID, Destination_airport_ID " + 
+				"FROM route";
+		List<Adiacenza> list = new ArrayList<>();
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				list.add(new Adiacenza( res.getInt("Source_airport_ID"), res.getInt("Destination_airport_ID")));
 			}
 			conn.close();
 			return list;
